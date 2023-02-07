@@ -154,7 +154,7 @@ def end(red = False):
     return render_template('event/end.html')
 
 
-@bp.route('/events')
+@bp.route('/')
 def index():
     db = get_db()
     posts = db.execute("SELECT id, duration, category, comment, finished, author_id FROM task WHERE author_id = ? ORDER by id DESC", (1,)).fetchall()
