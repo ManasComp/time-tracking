@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Edit "{{ post['category'] }}"{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="title">category</label>
+    <input name="category" id="title"
+      value="{{ request.form['category'] or post['category'] }}" required>
+    <label for="comment">comment</label>
+    <textarea name="comment" id="comment">{{ request.form['comment'] or post['comment'] }}</textarea>
+    <input type="submit" value="Save">
+  </form>
+  <hr>
+
+  <form action="{{ url_for('.delete', id=post['id']) }}" method="post">
+    <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+  </form>
+{% endblock %}

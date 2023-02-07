@@ -6,7 +6,7 @@ from werkzeug.exceptions import abort
 import sqlite3
 from flaskr.auth import login_required
 from flaskr.db import get_db
-from datetime import datetime
+from datetime import datetime, timedelta
 from flaskr.helpers.database import Database
 
 
@@ -47,6 +47,9 @@ def update_last_active_task_duration_for_user(db, userid: int, duration: int):
 
 def end_last_active_task_for_user(db, userid: int, category: str, comment: str):
     db.execute("UPDATE task SET category = ?, comment = ?, finished = 1 WHERE id = ?", (category, comment, get_last_active_task_id_for_user(db, userid)))
+
+def edit_task(db, id: int, category: str, comment: str):
+    db.execute("UPDATE task SET category = ?, comment = ? WHERE id = ?", (category, comment, id))
 
 def to_time(db, user_id):
     duration = get_last_active_task_duration_for_user(db, user_id)
@@ -120,7 +123,7 @@ def log():
 
 @bp.route('/end', methods=('GET', 'POST'))
 #@login_required
-def end():
+def end(red = False):
     db = get_db()
     user_id = get_user_id()
     if get_count_of_active_tasks_for_user(db, user_id) != 1:
@@ -139,9 +142,94 @@ def end():
         if error is not None:
             flash(error)
         else:
-            pause()
             db = get_db()
-            end_last_active_task_for_user(db, user_id, duration, category, comment)
+            total_seconds, string_format = to_time(db, user_id)
+            update_last_active_task_duration_for_user(db, user_id, total_seconds)
+            create_new_event(db, user_id, "end")
+            end_last_active_task_for_user(db, user_id, category, comment)
             db.commit()
+            if red:
+                return redirect(url_for('event.index'))
             return "timer ended: " + string_format
     return render_template('event/end.html')
+
+
+@bp.route('/events')
+def index():
+    db = get_db()
+    posts = db.execute("SELECT id, duration, category, comment, finished, author_id FROM task WHERE author_id = ? ORDER by id DESC", (1,)).fetchall()
+    new_posts = []
+    for post in posts:
+        new_posts.append(dict(post))
+        new_posts[len(new_posts)-1]['duration'] = str(timedelta(seconds=post['duration']))
+        new_posts[len(new_posts)-1]['finished'] =  "yes" if post['finished'] == 1 else "no"
+    return render_template('event/index.html', posts=new_posts)
+
+
+@bp.route('/started', methods=('GET', 'POST'))
+@login_required
+def started():
+    flash(start())
+    return redirect(url_for('event.index'))
+
+@bp.route('/paused', methods=('GET', 'POST'))
+@login_required
+def paused():
+    flash(pause())
+    return redirect(url_for('event.index'))
+
+@bp.route('/ended', methods=('GET', 'POST'))
+@login_required
+def ended():
+    db = get_db()
+    user_id = get_user_id()
+    if get_count_of_active_tasks_for_user(db, user_id) != 1:
+        flash("nothinkg to end or error")
+        return redirect(url_for('event.index'))
+    end()
+    if request.method == 'POST':
+        return redirect(url_for('event.index'))
+    return render_template('event/end.html')
+
+def get_task(id):
+    post = get_db().execute("SELECT category, comment, id FROM task WHERE id = ?",(id,)).fetchone()
+
+    if post is None:
+        abort(404, f"Post id {id} doesn't exist.")
+
+    return post
+
+@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+@login_required
+def update(id):
+    post = get_task(id)
+    user_id = get_user_id()
+
+    if request.method == 'POST':
+        category = request.form['category']
+        comment = request.form['comment']
+        error = None
+
+        if not category:
+            #error = 'Title is required.'
+            category = "no category"
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            edit_task(db, user_id, category, comment)
+            db.commit()
+            return redirect(url_for('event.index'))
+
+    return render_template('event/update.html', post=post)
+
+
+@bp.route('/<int:id>/delete', methods=('POST',))
+@login_required
+def delete(id):
+    get_task(id)
+    db = get_db()
+    db.execute('DELETE FROM post WHERE id = ?', (id,))
+    db.commit()
+    return redirect(url_for('blog.index'))
