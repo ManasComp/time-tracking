@@ -178,6 +178,12 @@ def paused():
     flash(pause())
     return redirect(url_for('event.index'))
 
+
+@bp.route('/logged', methods=('GET', 'POST'))
+def logged():
+    flash(log())
+    return redirect(url_for('event.index'))
+
 @bp.route('/ended', methods=('GET', 'POST'))
 @login_required
 def ended():
