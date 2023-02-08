@@ -52,8 +52,11 @@ def edit_task(db, id: int, category: str, comment: str):
     db.execute("UPDATE task SET category = ?, comment = ? WHERE id = ?", (category, comment, id))
 
 def to_time(db, user_id):
-    duration = get_last_active_task_duration_for_user(db, user_id)
-    time1 : time=  datetime.now() - get_last_active_event_created_for_user(db, user_id) 
+    duration = get_last_active_task_duration_for_user(db, user_id, pause=False)
+    if not pause:
+        time1 : time=  datetime.now() - get_last_active_event_created_for_user(db, user_id) 
+    else:
+        time1 : time=  get_last_active_task_duration_for_user(db, user_id)
     hours = (time1.seconds + duration) // 3600 
     minutes = ((time1.seconds + duration) // 60) % 60
     seconds = (time1.seconds + duration) % 60
