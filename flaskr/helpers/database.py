@@ -30,7 +30,7 @@ class Database:
         db.execute("UPDATE task SET category = ?, comment = ?, finished = 1 WHERE id = ?", (category, comment, self.get_last_active_task_id_for_user(db, userid)))
 
     def edit_task(self, db, userid: int, category: str, comment: str) -> None:
-        db.execute("UPDATE task SET category = ?, comment = ? WHERE id = ?", (category, comment, self.get_last_active_task_id_for_user(db, userid)))
+        db.execute("UPDATE task SET category = ?, comment = ? WHERE id = ?", (category, comment, userid))
 
     def get_task(self, db, id: int):
         return db.execute("SELECT category, comment, id FROM task WHERE id = ?",(id,)).fetchone()
@@ -40,3 +40,6 @@ class Database:
 
     def delete_task(self, db, id: int):
         db.execute("DELETE FROM task WHERE id = ?", (id,))
+
+    def get_events_for_task(self, db, task_id: int):
+        return db.execute("SELECT id, created, event_category FROM event WHERE task_id = ? ORDER BY created DESC", (task_id,))

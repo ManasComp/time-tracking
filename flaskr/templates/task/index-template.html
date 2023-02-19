@@ -1,0 +1,9 @@
+
+    
+      <h1>{% block title %}Records{% endblock %}</h1>
+      {% if g.user %}
+        <a class="action" href="{{ url_for('task.started') }}"><button type="button" class="btn btn-primary">Start</button></a>
+        <a class="action" href="{{ url_for('task.paused') }}"><button type="button" class="btn btn-primary">Pause</button></a>
+        <a class="action" href="{{ url_for('task.ended') }}"><button type="button" class="btn btn-primary">End</button></a>
+        <a class="action" href="{{ url_for('task.logged') }}"><button type="button" class="btn btn-primary">Log</button></a>
+      {% endif %}

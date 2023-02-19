@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% include "task/index-template.html" %}
+{% endblock %}
+
+{% block content %}
+  {% for post in posts %}
+    <article class="post">
+      <header>
+        <div>
+          <a class="action" href="{{ url_for('task.show', id=post['id']) }}"><h1>{{ post['category'] }}</h1></a>
+          <div class="about">duration: {{ post['duration'] }}, finished: {{ post['finished'] }}</div>
+        </div>
+        {% if g.user['id'] == post['author_id'] %}
+          <a class="action" href="{{ url_for('task.update', id=post['id']) }}">Edit</a>
+        {% endif %}
+      </header>
+      <p class="body">{{ post['comment'] }}</p>
+    </article>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+{% endblock %}

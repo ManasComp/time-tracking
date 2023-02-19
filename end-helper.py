@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import sqlite3
-from flaskr import event
+from flaskr import task
 
 import sys, getopt
 
@@ -42,10 +42,10 @@ def main(argv):
     # create a database connection
     conn = create_connection(database)
     with conn:
-        if event.get_count_of_active_tasks_for_user(conn, 1) != 1:
+        if task.get_count_of_active_tasks_for_user(conn, 1) != 1:
             print("error")
         else:
-            event.end_last_active_task_for_user(conn, 1, category, comment)
+            task.end_last_active_task_for_user(conn, 1, category, comment)
 
 
 if __name__ == "__main__":

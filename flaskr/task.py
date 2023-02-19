@@ -7,7 +7,7 @@ from flaskr.db import get_db
 import flaskr.helpers.database
 import flaskr.helpers.convertors
 
-bp = Blueprint('event', __name__)
+bp = Blueprint('task', __name__)
 dat = flaskr.helpers.database.Database()
 conv = flaskr.helpers.convertors.Convertor()
 
@@ -79,14 +79,60 @@ def log():
     return "timer " + a + ", actual time: " + duration.__str__()
 
 
-@bp.route('/end', methods=('GET', 'POST'))
+@bp.route('/')
+def index():
+    new_posts=conv.returm_formated_tasks(get_db(), dat, get_user_id())
+    return render_template('task/index.html', posts=new_posts)
+
+
+@bp.route('/started', methods=('GET', 'POST'))
+@login_required
+def started():
+    flash(start())
+    return redirect(url_for('task.index'))
+
+@bp.route('/paused', methods=('GET', 'POST'))
+@login_required
+def paused():
+    flash(pause())
+    return redirect(url_for('task.index'))
+
+
+@bp.route('/logged', methods=('GET', 'POST'))
+def logged():
+    flash(log())
+    return redirect(url_for('task.index'))
+
+@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+@login_required
+def update(id):
+    if request.method == 'POST':
+        category = request.form['category']
+        comment = request.form['comment']
+        error = None
+
+        if not category:
+            #error = 'Title is required.'
+            category = "no category"
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            dat.edit_task(db, id, category, comment)
+            db.commit()
+            return redirect(url_for('task.index'))
+    post = get_task(id)
+    return render_template('task/edit.html', post=post, message = "Edit task")
+
+@bp.route('/ended', methods=('GET', 'POST'))
 #@login_required
-def end(red = False):
+def ended():
     db = get_db()
     user_id = get_user_id()
     if dat.get_count_of_active_tasks_for_user(db, user_id) != 1:
-        return "nothinkg to end or error"
-    duration = conv.return_duration(db, user_id, dat)
+        flash("nothinkg to end or error")
+        return redirect(url_for('task.index'))
 
     if request.method == 'POST':
         category = request.form['category']
@@ -106,76 +152,17 @@ def end(red = False):
             dat.create_new_event(db, user_id, "end")
             dat.end_last_active_task_for_user(db, user_id, category, comment)
             db.commit()
-            if red:
-                return redirect(url_for('event.index'))
-            return "timer ended: " + duration.__str__()
-    return render_template('event/end.html')
+            flash("timer ended: " + duration.__str__())
+            return redirect(url_for('task.index'))
 
-
-@bp.route('/')
-def index():
-    new_posts=conv.returm_formated_tasks(get_db(), dat, get_user_id())
-    return render_template('event/index.html', posts=new_posts)
-
-
-@bp.route('/started', methods=('GET', 'POST'))
-@login_required
-def started():
-    flash(start())
-    return redirect(url_for('event.index'))
-
-@bp.route('/paused', methods=('GET', 'POST'))
-@login_required
-def paused():
-    flash(pause())
-    return redirect(url_for('event.index'))
-
-
-@bp.route('/logged', methods=('GET', 'POST'))
-def logged():
-    flash(log())
-    return redirect(url_for('event.index'))
-
-@bp.route('/ended', methods=('GET', 'POST'))
-@login_required
-def ended():
-    db = get_db()
-    user_id = get_user_id()
-    if dat.get_count_of_active_tasks_for_user(db, user_id) != 1:
-        flash("nothinkg to end or error")
-        return redirect(url_for('event.index'))
-    end()
-    if request.method == 'POST':
-        return redirect(url_for('event.index'))
-    return render_template('event/end.html')
-
-
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
-@login_required
-def update(id):
-    post = get_task(id)
-
-    if request.method == 'POST':
-        category = request.form['category']
-        comment = request.form['comment']
-        error = None
-
-        if not category:
-            #error = 'Title is required.'
-            category = "no category"
-
-        if error is not None:
-            flash(error)
-        else:
-            db = get_db()
-            dat.edit_task(db, get_user_id(), category, comment)
-            db.commit()
-
-            print("\n\n\n\n\ red \n\n")
-            return redirect(url_for('event.index'))
-
-    return render_template('event/update.html', post=post)
-
+    post = get_task(dat.get_last_active_task_id_for_user(db, user_id))
+    if post["category"] == "UNDEFINED":
+        new_posts = []
+        new_posts.append(dict(post))
+        new_posts[0]['category'] = ""
+        new_posts[0]['comment'] = post["comment"]
+        post = new_posts[0]
+    return render_template('task/edit.html', post=post, message="End")
 
 @bp.route('/<int:id>/delete', methods=('POST',))
 @login_required
@@ -183,4 +170,13 @@ def delete(id):
     db = get_db()
     dat.delete_task(db, id)
     db.commit()
-    return redirect(url_for('event.index'))
+    return redirect(url_for('task.index'))
+
+@bp.route('/<int:id>/show', methods=('POST', 'GET'))
+@login_required
+def show(id):
+    db = get_db()
+    dat.get_events_for_task(db, id)
+    db.commit()
+    return render_template(('task/event-index.html'), posts=dat.get_events_for_task(db, id))
+
