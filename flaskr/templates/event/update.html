@@ -6,8 +6,8 @@
 
 {% block content %}
   <form method="post">
-    <label for="title">category</label>
-    <input name="category" id="title"
+    <label for="category">category</label>
+    <input name="category" id="category"
       value="{{ request.form['category'] or post['category'] }}" required>
     <label for="comment">comment</label>
     <textarea name="comment" id="comment">{{ request.form['comment'] or post['comment'] }}</textarea>
