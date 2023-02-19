@@ -9,7 +9,7 @@ WORKDIR /app
 
 RUN pip3 install -r requirements.txt
 
-#RUN flask init-db
+RUN flask init-db
 
 #Unit tests
 #RUN pip install pytest && pytest
