@@ -18,7 +18,6 @@ CREATE TABLE user (
   role_id INTEGER NOT NULL DEFAULT 1,
   username TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  comment TEXT NOT NULL DEFAULT "NONE"
   FOREIGN KEY (role_id) REFERENCES user_role (id)
 );
 
@@ -41,3 +40,4 @@ CREATE TABLE event (
   event_category TEXT NOT NULL,
   FOREIGN KEY (task_id) REFERENCES task (id)
 );
+
