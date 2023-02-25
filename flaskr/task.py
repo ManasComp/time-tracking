@@ -177,7 +177,7 @@ def delete(id):
 @login_required
 def show(id):
     db = get_db()
-    return render_template(('task/event-index.html'), posts=dat.get_events_for_task(db, id), time=conv.return_duration(db, get_user_id(), dat, True))
+    return render_template(('task/event-index.html'), posts=dat.get_events_for_task(db, id), time = conv.return_duration_random_task(db, id, dat))
 
 
 @bp.route('/users')

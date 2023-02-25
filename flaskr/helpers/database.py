@@ -17,6 +17,9 @@ class Database:
     def get_last_active_task_duration_for_user(self, db, userid: int) -> int:
         return db.execute("SELECT duration FROM task WHERE author_id = ? AND finished = 0", (userid,)).fetchone()[0]
 
+    def get_task_duration(self, db, task_id: int) -> int:
+        return db.execute("SELECT duration FROM task WHERE id = ?", (task_id,)).fetchone()[0]
+
     def get_last_active_event_category_for_user(self, db, userid: int) -> str:
         return db.execute("SELECT event_category FROM event WHERE task_id = ? ORDER BY id DESC LIMIT 1", (self.get_last_active_task_id_for_user(db, userid),)).fetchone()[0]
 
@@ -64,3 +67,6 @@ class Database:
     
     def delete_user(self, db, id) -> None:
         db.execute("DELETE FROM user WHERE id = ?", (id,))
+
+    def get_user_by_task_id(self, db, task_id) -> int:
+        return db.execute("SELECT author_id FROM task WHERE id = ?", (task_id,)).fetchone()[0]

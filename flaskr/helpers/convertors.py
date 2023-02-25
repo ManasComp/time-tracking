@@ -22,6 +22,13 @@ class Convertor:
         seconds = duration % 60
         return Time(hours, minutes, seconds)
     
+    def return_duration_random_task(self, db, task_id : int, dat : Database):
+        duration = dat.get_task_duration(db, task_id)
+        hours = duration // 3600 
+        minutes = (duration // 60) % 60
+        seconds = duration % 60
+        return Time(hours, minutes, seconds)
+    
     def returm_formated_tasks(self, db, dat : Database, user_id : int):
         posts = dat.get_all_tasks(db, user_id)
         new_posts = []
