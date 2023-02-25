@@ -1,0 +1,58 @@
+
+<style>
+  .div_box {
+    padding: 10px;
+    display: none;
+  }
+
+  .checkbox:checked + .div_box {
+    display: block;
+  }
+
+#wrapper {
+    overflow: hidden; /* will contain if #first is longer than #second */
+}
+#first {
+    float:left; /* add this */
+}
+#change_passwrod {
+    overflow: hidden; /* if you don't want #second to wrap below #first */
+}
+</style>
+
+
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Edit User {{ post["username"] }} {% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+    <label for="username">Username</label>
+    <input name="username" id="username" value="{{ request.form['username'] or post['username'] }}" required>
+    <label for="user_type">User role is</label>
+    <select name= user_type method="GET" action="/">
+        <option value='2' {% if post["role"] == 'Admin' %} selected {% endif %}>Admin</option>
+        <option value='1' {% if post["role"] == 'User' %} selected {% endif %}>User</option>
+    </select>
+
+    <div id="wrapper">
+        <label for="change_passwrod">Change password?   </label>
+        <input name="change_passwrod" id="change_passwrod" type="checkbox" class="checkbox" >
+        <div class="div_box">
+            <label id="first" for="password">New password</label>
+            <input name="password" id="password" value="{{ request.form['password'] }}">
+        </div>
+    </div>
+    <br>
+    <input type="submit" value="Save">
+  </form>
+  <hr>
+
+  <form action="{{ url_for('task.delete_user', id=post['id']) }}" method="post">
+    <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+  </form>
+
+  
+{% endblock %}

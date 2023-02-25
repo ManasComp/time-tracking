@@ -1,14 +1,28 @@
-DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS post;
+
+DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS event;
+DROP TABLE IF EXISTS user_role;
 
+CREATE TABLE user_role (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  role TEXT UNIQUE NOT NULL
+);
+
+INSERT INTO user_role (role) VALUES('User');
+INSERT INTO user_role (role) VALUES('Admin');
 
 CREATE TABLE user (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  role_id INTEGER NOT NULL DEFAULT 1,
   username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL
+  password TEXT NOT NULL,
+  comment TEXT NOT NULL DEFAULT "NONE"
+  FOREIGN KEY (role_id) REFERENCES user_role (id)
 );
+
+INSERT INTO user (role_id, username, password) VALUES(2, "Ondrej", "pbkdf2:sha256:260000$Qredm6S7rWsERXHP$f707c910a190a6ce8e335549c7f8116f3c8702109a1303edea8b7924005787cf");
 
 CREATE TABLE task (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,13 +40,4 @@ CREATE TABLE event (
   created TIMESTAMP NOT NULL DEFAULT (datetime('now','localtime')),
   event_category TEXT NOT NULL,
   FOREIGN KEY (task_id) REFERENCES task (id)
-);
-
-CREATE TABLE post (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  author_id INTEGER NOT NULL,
-  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  title TEXT NOT NULL,
-  body TEXT NOT NULL,
-  FOREIGN KEY (author_id) REFERENCES user (id)
 );

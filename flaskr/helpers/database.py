@@ -43,3 +43,24 @@ class Database:
 
     def get_events_for_task(self, db, task_id: int):
         return db.execute("SELECT id, created, event_category FROM event WHERE task_id = ? ORDER BY created DESC", (task_id,))
+    
+    def get_admin_role_id(self, db):
+        return db.execute("SELECT id FROM user_role WHERE role = 'Admin'").fetchone()[0]
+
+    def is_admin(self, db, user_id) -> bool:
+        return db.execute("SELECT role_id FROM user WHERE id = ?", (user_id,)).fetchone()[0] == self.get_admin_role_id(db)
+    
+    def get_users(self, db) -> bool:
+        return db.execute("SELECT user.id, username, role FROM user inner join user_role ur on ur.id = user.role_id").fetchall()
+    
+    def get_user(self, db, id) -> bool:
+        return db.execute("SELECT user.id as id, username, role FROM user inner join user_role ur on ur.id = user.role_id WHERE user.id = ?", (id,)).fetchone()
+    
+    def edit_user(self, db, id, username, role) -> None:
+        db.execute("UPDATE user SET username = ?, role_id = ? WHERE id = ?", (username, role, id))
+
+    def edit_user_with_password(self, db, id, username, role, password) -> None:
+        db.execute("UPDATE user SET username = ?, role_id = ?, password = ? WHERE id = ?", (username, role, password, id))
+    
+    def delete_user(self, db, id) -> None:
+        db.execute("DELETE FROM user WHERE id = ?", (id,))

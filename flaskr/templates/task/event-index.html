@@ -4,9 +4,11 @@
 {% block header %}
 {% include "task/index-template.html" %}
   <a class="action" href="{{ url_for('task.index') }}"><button type="button" class="btn btn-dark"> Back</button></a>
+
 {% endblock %}
 
 {% block content %}
+  Total time: {{ time }}
   {% for post in posts %}
     <article class="post">
       <header>
@@ -14,9 +16,6 @@
           <h1>{{ post['event_category'] }}</h1>
           <div class="about">Created on: {{ post['created'] }}</div>
         </div>
-        <!-- {% if g.user['id'] == post['author_id'] %}
-          <a class="action" href="{{ url_for('task.update', id=post['id']) }}">Edit</a>
-        {% endif %} -->
       </header>
     </article>
     {% if not loop.last %}

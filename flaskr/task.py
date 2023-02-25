@@ -6,6 +6,7 @@ from flaskr.auth import login_required
 from flaskr.db import get_db
 import flaskr.helpers.database
 import flaskr.helpers.convertors
+from werkzeug.security import generate_password_hash
 
 bp = Blueprint('task', __name__)
 dat = flaskr.helpers.database.Database()
@@ -176,7 +177,43 @@ def delete(id):
 @login_required
 def show(id):
     db = get_db()
-    dat.get_events_for_task(db, id)
-    db.commit()
-    return render_template(('task/event-index.html'), posts=dat.get_events_for_task(db, id))
+    return render_template(('task/event-index.html'), posts=dat.get_events_for_task(db, id), time=conv.return_duration(db, get_user_id(), dat, True))
 
+
+@bp.route('/users')
+@login_required
+def get_users():
+    if dat.is_admin(get_db(), get_user_id()):
+        return render_template(('task/users.html'), posts=dat.get_users(get_db()))
+    flash("You are not admin!")
+    return redirect(url_for('task.index'))
+
+@bp.route('/users/<int:id>/show', methods=('POST', 'GET'))
+@login_required
+def show_user(id):
+    db = get_db()
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user_type = request.form['user_type']
+        print("\n\n\n\n\n\n")
+        print(password)
+        print("\n\n\n\n\n\n")
+        if password == "" or password is not None:
+            password = generate_password_hash(password)
+            dat.edit_user_with_password(db, id, username, user_type, password)
+        else:
+            dat.edit_user(db, id, username, user_type)
+    
+        db.commit()
+        return redirect(url_for('task.get_users'))
+    return render_template(('task/edit-user.html'), post=dat.get_user(db, id))
+
+
+@bp.route('/users/<int:id>/delete', methods=('POST',))
+@login_required
+def delete_user(id):
+    db = get_db()
+    dat.delete_task(db, id)
+    db.commit()
+    return redirect(url_for('task.index'))
