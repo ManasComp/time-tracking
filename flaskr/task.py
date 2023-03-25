@@ -23,11 +23,11 @@ def get_user_id() -> int:
     return g.user["id"]
 
 
-def get_task(identification_number: int):
+def get_task(id: int):
     """Get a task and its author by id."""
-    post = dat.get_task(get_db(), identification_number)
+    post = dat.get_task(get_db(), id)
     if post is None:
-        abort(404, f"Post id {identification_number} doesn't exist.")
+        abort(404, f"Post id {id} doesn't exist.")
     return post
 
 
@@ -52,7 +52,6 @@ def start():
     duration = conv.return_duration(database, user_id, dat)
 
     database.commit()
-    # TODO: check
     return text + " at: " + str(duration)
 
 
@@ -74,7 +73,6 @@ def pause():
     dat.create_new_event(database, user_id, "pause")
     database.commit()
 
-    # TODO: check
     return "timer paused at: " + str(duration)
 
 
@@ -92,7 +90,6 @@ def log():
     else:
         duration = conv.return_duration(database, user_id, dat, False)
 
-    # TODO: check
     return "timer " + event_category + ", actual time: " + str(duration)
 
 
@@ -128,7 +125,7 @@ def logged():
 
 @bp.route("/<int:id>/update", methods=("GET", "POST"))
 @login_required
-def update(identification_number):
+def update(id):
     """Update a task if the current user is the author."""
     if request.method == "POST":
         category = request.form["category"]
@@ -142,10 +139,10 @@ def update(identification_number):
             flash(error)
         else:
             database = get_db()
-            dat.edit_task(database, identification_number, category, comment)
+            dat.edit_task(database, id, category, comment)
             database.commit()
             return redirect(url_for("task.index"))
-    post = get_task(identification_number)
+    post = get_task(id)
     return render_template("task/edit.html", post=post, message="Edit task")
 
 
@@ -177,7 +174,6 @@ def ended():
             dat.create_new_event(database, user_id, "end")
             dat.end_last_active_task_for_user(database, user_id, category, comment)
             database.commit()
-            # TODO: check
             flash("timer ended: " + str(duration))
             return redirect(url_for("task.index"))
 
@@ -193,23 +189,23 @@ def ended():
 
 @bp.route("/<int:id>/delete", methods=("POST",))
 @login_required
-def delete(identification_number):
+def delete(id):
     """Delete a task."""
     database = get_db()
-    dat.delete_task(database, identification_number)
+    dat.delete_task(database, id)
     database.commit()
     return redirect(url_for("task.index"))
 
 
 @bp.route("/<int:id>/show", methods=("POST", "GET"))
 @login_required
-def show(identification_number):
+def show(id):
     """Show all events for task."""
     database = get_db()
     return render_template(
         ("task/event-index.html"),
-        posts=dat.get_events_for_task(database, identification_number),
-        time=conv.return_duration_random_task(database, identification_number, dat),
+        posts=dat.get_events_for_task(database, id),
+        time=conv.return_duration_random_task(database, id, dat),
     )
 
 
@@ -225,7 +221,7 @@ def get_users():
 
 @bp.route("/users/<int:id>/show", methods=("POST", "GET"))
 @login_required
-def show_user(identification_number):
+def show_user(id):
     """Show user."""
     database = get_db()
     if request.method == "POST":
@@ -238,23 +234,23 @@ def show_user(identification_number):
         if password == "" or password is not None:
             password = generate_password_hash(password)
             dat.edit_user_with_password(
-                database, identification_number, username, user_type, password
+                database, id, username, user_type, password
             )
         else:
-            dat.edit_user(database, identification_number, username, user_type)
+            dat.edit_user(database, id, username, user_type)
 
         database.commit()
         return redirect(url_for("task.get_users"))
     return render_template(
-        ("task/edit-user.html"), post=dat.get_user(database, identification_number)
+        ("task/edit-user.html"), post=dat.get_user(database, id)
     )
 
 
 @bp.route("/users/<int:id>/delete", methods=("POST",))
 @login_required
-def delete_user(identification_number):
+def delete_user(id):
     """Delete a user."""
     database = get_db()
-    dat.delete_task(database, identification_number)
+    dat.delete_task(database, id)
     database.commit()
     return redirect(url_for("task.index"))
