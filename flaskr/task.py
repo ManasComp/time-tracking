@@ -1,219 +1,260 @@
-from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
-)
+"""Task blueprint."""
+
+from flask import (Blueprint, flash, g, redirect, render_template, request,
+                   url_for)
 from werkzeug.exceptions import abort
-from flaskr.auth import login_required
-from flaskr.db import get_db
-import flaskr.helpers.database
-import flaskr.helpers.convertors
 from werkzeug.security import generate_password_hash
 
-bp = Blueprint('task', __name__)
+import flaskr.helpers.convertors
+import flaskr.helpers.database
+from flaskr.auth import login_required
+from flaskr.db import get_db
+
+bp = Blueprint("task", __name__)
 dat = flaskr.helpers.database.Database()
 conv = flaskr.helpers.convertors.Convertor()
 
-def get_user_id() -> int:
-    if g.user is None:
-        return 1
-    return g.user['id']
 
-def get_task(id: int):
-    post = dat.get_task(get_db(), id)
+def get_user_id() -> int:
+    """Get user id from the current user."""
+    if g.user is None:
+        # we want to have a default user
+        return 1
+    return g.user["id"]
+
+
+def get_task(identification_number: int):
+    """Get a task and its author by id."""
+    post = dat.get_task(get_db(), identification_number)
     if post is None:
-        abort(404, f"Post id {id} doesn't exist.")
+        abort(404, f"Post id {identification_number} doesn't exist.")
     return post
 
-@bp.route('/start')
-#@login_required
+
+@bp.route("/start")
 def start():
+    """Start timer for user."""
     user_id = get_user_id()
-    db = get_db()
+    database = get_db()
     text = "timer resumed"
-    count_of_active_tasks_for_user: int = dat.get_count_of_active_tasks_for_user(db, user_id)
+    count_of_active_tasks_for_user: int = dat.get_count_of_active_tasks_for_user(
+        database, user_id
+    )
     if count_of_active_tasks_for_user == 0:
-        dat.create_new_task(db, user_id)
+        dat.create_new_task(database, user_id)
         text = "timer started"
     elif count_of_active_tasks_for_user != 1:
         abort(500)
-    elif dat.get_last_active_event_category_for_user(db,user_id) == "start":
+    elif dat.get_last_active_event_category_for_user(database, user_id) == "start":
         return "already started"
 
-    dat.create_new_event(db, user_id, "start")
-    duration = conv.return_duration(db, user_id, dat)
+    dat.create_new_event(database, user_id, "start")
+    duration = conv.return_duration(database, user_id, dat)
 
-    db.commit()
-    return text + " at: " + duration.__str__()
+    database.commit()
+    # TODO: check
+    return text + " at: " + str(duration)
 
 
-@bp.route('/pause')
-#@login_required
+@bp.route("/pause")
 def pause():
-    db = get_db()
+    """Pause timer for user."""
+    database = get_db()
     user_id = get_user_id()
 
-    if dat.get_count_of_active_tasks_for_user(db, user_id) != 1:
+    if dat.get_count_of_active_tasks_for_user(database, user_id) != 1:
         return "nothinkg to pause or error"
-    if dat.get_last_active_event_category_for_user(db, user_id) == "pause":
+    if dat.get_last_active_event_category_for_user(database, user_id) == "pause":
         return "already paused"
-    
-    duration = conv.return_duration(db, user_id, dat)
-    dat.update_last_active_task_duration_for_user(db, user_id, duration.total_seconds())
-    dat.create_new_event(db, user_id, "pause")
-    db.commit()
 
-    return "timer paused at: " + duration.__str__()
+    duration = conv.return_duration(database, user_id, dat)
+    dat.update_last_active_task_duration_for_user(
+        database, user_id, duration.total_seconds()
+    )
+    dat.create_new_event(database, user_id, "pause")
+    database.commit()
 
-@bp.route('/log')
-#@login_required
+    # TODO: check
+    return "timer paused at: " + str(duration)
+
+
+@bp.route("/log")
 def log():
-    db = get_db()
+    """Log timer for user."""
+    database = get_db()
     user_id = get_user_id()
-    if dat.get_count_of_active_tasks_for_user(db, user_id) != 1:
+    if dat.get_count_of_active_tasks_for_user(database, user_id) != 1:
         return "nothinkg to show or error"
-    
-    a =  dat.get_last_active_event_category_for_user(db, user_id)
-    if a == "pause":
-        duration = conv.return_duration(db, user_id, dat, True)
+
+    event_category = dat.get_last_active_event_category_for_user(database, user_id)
+    if event_category == "pause":
+        duration = conv.return_duration(database, user_id, dat, True)
     else:
-        duration = conv.return_duration(db, user_id, dat, False)
+        duration = conv.return_duration(database, user_id, dat, False)
 
-    return "timer " + a + ", actual time: " + duration.__str__()
+    # TODO: check
+    return "timer " + event_category + ", actual time: " + str(duration)
 
 
-@bp.route('/')
+@bp.route("/")
 def index():
-    new_posts=conv.returm_formated_tasks(get_db(), dat, get_user_id())
-    return render_template('task/index.html', posts=new_posts)
+    """Show all the tasks, most recent first."""
+    new_posts = conv.returm_formated_tasks(get_db(), dat, get_user_id())
+    return render_template("task/index.html", posts=new_posts)
 
 
-@bp.route('/started', methods=('GET', 'POST'))
+@bp.route("/started", methods=("GET", "POST"))
 @login_required
 def started():
+    """Start timer for user."""
     flash(start())
-    return redirect(url_for('task.index'))
+    return redirect(url_for("task.index"))
 
-@bp.route('/paused', methods=('GET', 'POST'))
+
+@bp.route("/paused", methods=("GET", "POST"))
 @login_required
 def paused():
+    """Pause timer for user."""
     flash(pause())
-    return redirect(url_for('task.index'))
+    return redirect(url_for("task.index"))
 
 
-@bp.route('/logged', methods=('GET', 'POST'))
+@bp.route("/logged", methods=("GET", "POST"))
 def logged():
+    """Log timer for user."""
     flash(log())
-    return redirect(url_for('task.index'))
+    return redirect(url_for("task.index"))
 
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+
+@bp.route("/<int:id>/update", methods=("GET", "POST"))
 @login_required
-def update(id):
-    if request.method == 'POST':
-        category = request.form['category']
-        comment = request.form['comment']
+def update(identification_number):
+    """Update a task if the current user is the author."""
+    if request.method == "POST":
+        category = request.form["category"]
+        comment = request.form["comment"]
         error = None
 
         if not category:
-            #error = 'Title is required.'
             category = "no category"
 
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            dat.edit_task(db, id, category, comment)
-            db.commit()
-            return redirect(url_for('task.index'))
-    post = get_task(id)
-    return render_template('task/edit.html', post=post, message = "Edit task")
+            database = get_db()
+            dat.edit_task(database, identification_number, category, comment)
+            database.commit()
+            return redirect(url_for("task.index"))
+    post = get_task(identification_number)
+    return render_template("task/edit.html", post=post, message="Edit task")
 
-@bp.route('/ended', methods=('GET', 'POST'))
-#@login_required
+
+@bp.route("/ended", methods=("GET", "POST"))
 def ended():
-    db = get_db()
+    """End timer for user."""
+    database = get_db()
     user_id = get_user_id()
-    if dat.get_count_of_active_tasks_for_user(db, user_id) != 1:
+    if dat.get_count_of_active_tasks_for_user(database, user_id) != 1:
         flash("nothinkg to end or error")
-        return redirect(url_for('task.index'))
+        return redirect(url_for("task.index"))
 
-    if request.method == 'POST':
-        category = request.form['category']
-        comment = request.form['comment']
+    if request.method == "POST":
+        category = request.form["category"]
+        comment = request.form["comment"]
         error = None
 
         if not category:
-            #error = 'Title is required.'
             category = "no category"
 
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            duration = conv.return_duration(db, user_id, dat)
-            dat.update_last_active_task_duration_for_user(db, user_id, duration.total_seconds())
-            dat.create_new_event(db, user_id, "end")
-            dat.end_last_active_task_for_user(db, user_id, category, comment)
-            db.commit()
-            flash("timer ended: " + duration.__str__())
-            return redirect(url_for('task.index'))
+            database = get_db()
+            duration = conv.return_duration(database, user_id, dat)
+            dat.update_last_active_task_duration_for_user(
+                database, user_id, duration.total_seconds()
+            )
+            dat.create_new_event(database, user_id, "end")
+            dat.end_last_active_task_for_user(database, user_id, category, comment)
+            database.commit()
+            # TODO: check
+            flash("timer ended: " + str(duration))
+            return redirect(url_for("task.index"))
 
-    post = get_task(dat.get_last_active_task_id_for_user(db, user_id))
+    post = get_task(dat.get_last_active_task_id_for_user(database, user_id))
     if post["category"] == "UNDEFINED":
         new_posts = []
         new_posts.append(dict(post))
-        new_posts[0]['category'] = ""
-        new_posts[0]['comment'] = post["comment"]
+        new_posts[0]["category"] = ""
+        new_posts[0]["comment"] = post["comment"]
         post = new_posts[0]
-    return render_template('task/edit.html', post=post, message="End")
+    return render_template("task/edit.html", post=post, message="End")
 
-@bp.route('/<int:id>/delete', methods=('POST',))
+
+@bp.route("/<int:id>/delete", methods=("POST",))
 @login_required
-def delete(id):
-    db = get_db()
-    dat.delete_task(db, id)
-    db.commit()
-    return redirect(url_for('task.index'))
+def delete(identification_number):
+    """Delete a task."""
+    database = get_db()
+    dat.delete_task(database, identification_number)
+    database.commit()
+    return redirect(url_for("task.index"))
 
-@bp.route('/<int:id>/show', methods=('POST', 'GET'))
+
+@bp.route("/<int:id>/show", methods=("POST", "GET"))
 @login_required
-def show(id):
-    db = get_db()
-    return render_template(('task/event-index.html'), posts=dat.get_events_for_task(db, id), time = conv.return_duration_random_task(db, id, dat))
+def show(identification_number):
+    """Show all events for task."""
+    database = get_db()
+    return render_template(
+        ("task/event-index.html"),
+        posts=dat.get_events_for_task(database, identification_number),
+        time=conv.return_duration_random_task(database, identification_number, dat),
+    )
 
 
-@bp.route('/users')
+@bp.route("/users")
 @login_required
 def get_users():
+    """Show all users"""
     if dat.is_admin(get_db(), get_user_id()):
-        return render_template(('task/users.html'), posts=dat.get_users(get_db()))
+        return render_template(("task/users.html"), posts=dat.get_users(get_db()))
     flash("You are not admin!")
-    return redirect(url_for('task.index'))
+    return redirect(url_for("task.index"))
 
-@bp.route('/users/<int:id>/show', methods=('POST', 'GET'))
+
+@bp.route("/users/<int:id>/show", methods=("POST", "GET"))
 @login_required
-def show_user(id):
-    db = get_db()
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user_type = request.form['user_type']
+def show_user(identification_number):
+    """Show user."""
+    database = get_db()
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        user_type = request.form["user_type"]
         print("\n\n\n\n\n\n")
         print(password)
         print("\n\n\n\n\n\n")
         if password == "" or password is not None:
             password = generate_password_hash(password)
-            dat.edit_user_with_password(db, id, username, user_type, password)
+            dat.edit_user_with_password(
+                database, identification_number, username, user_type, password
+            )
         else:
-            dat.edit_user(db, id, username, user_type)
-    
-        db.commit()
-        return redirect(url_for('task.get_users'))
-    return render_template(('task/edit-user.html'), post=dat.get_user(db, id))
+            dat.edit_user(database, identification_number, username, user_type)
+
+        database.commit()
+        return redirect(url_for("task.get_users"))
+    return render_template(
+        ("task/edit-user.html"), post=dat.get_user(database, identification_number)
+    )
 
 
-@bp.route('/users/<int:id>/delete', methods=('POST',))
+@bp.route("/users/<int:id>/delete", methods=("POST",))
 @login_required
-def delete_user(id):
-    db = get_db()
-    dat.delete_task(db, id)
-    db.commit()
-    return redirect(url_for('task.index'))
+def delete_user(identification_number):
+    """Delete a user."""
+    database = get_db()
+    dat.delete_task(database, identification_number)
+    database.commit()
+    return redirect(url_for("task.index"))
