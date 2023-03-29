@@ -51,18 +51,18 @@ def init_db():
     """Initialize the database."""
 
     database = get_db()
-
-
-    with current_app.open_resource("schema.sql") as database_file:
-        database.executescript(database_file.read().decode("utf8"))
-    
+   
     try:
         with io.open(SERVER_ADDRESS, 'r') as p:
             database.executescript(p.read()).decode("utf8")
     except (Exception) as error:
         with open("error.txt", "w") as error_file:
             error_file.write(str(error))
-        
+        try:
+            with current_app.open_resource("schema.sql") as database_file:
+                database.executescript(database_file.read().decode("utf8"))
+        except:
+            print("backup load failed")
         print("backup load failed")
 
     backup_db()
