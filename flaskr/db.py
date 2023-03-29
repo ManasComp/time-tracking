@@ -56,7 +56,7 @@ def init_db():
         database.executescript(database_file.read().decode("utf8"))
 
     try:
-        with io.open(SERVER_ADDRESS, 'r') as p:
+        with current_app.open_resource(SERVER_ADDRESS) as p:
             database.executescript(p.read().decode("utf8"))
     except (Exception) as error:
         with open("error.txt", "w") as error_file:
