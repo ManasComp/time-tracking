@@ -5,6 +5,7 @@ import sqlite3
 import click
 from flask import current_app, g
 
+initilized = False
 
 SERVER_ADDRESS = "/database/backupdatabase.sql"
 
@@ -37,6 +38,19 @@ def backup_db():
     print("backup done")
 
 
+def load_db():
+    """Load the database."""
+    database = get_db()
+    with current_app.open_resource("schema1.sql") as database_file:
+        database.executescript(database_file.read().decode("utf8"))
+    try:
+        with current_app.open_resource(SERVER_ADDRESS) as p:
+            database.executescript(p.read().decode("utf8"))
+    except (Exception) as error:
+        with open("error.txt", "w") as error_file:
+            error_file.write(str(error))
+    initilized = True
+
 def close_db(e=None):
     """Close the database connection."""
     print("closing db")
@@ -51,22 +65,8 @@ def init_db():
     """Initialize the database."""
 
     database = get_db()
-   
-    with current_app.open_resource("schema1.sql") as database_file:
+    with current_app.open_resource("schema.sql") as database_file:
         database.executescript(database_file.read().decode("utf8"))
-
-    try:
-        with current_app.open_resource(SERVER_ADDRESS) as p:
-            database.executescript(p.read().decode("utf8"))
-    except (Exception) as error:
-        with open("error.txt", "w") as error_file:
-            error_file.write(str(error))
-        # try:
-        #     with current_app.open_resource("schema.sql") as database_file:
-        #         database.executescript(database_file.read().decode("utf8"))
-        # except:
-        #     print("backup load failed")
-        print("backup load failed")
 
 
 @click.command("init-db")
