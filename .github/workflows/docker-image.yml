@@ -18,5 +18,5 @@ jobs:
       run:  |
         echo "${{ secrets.DockerHub }}" | docker login -u "manascomp" --password-stdin
         docker build . --file Dockerfile --tag time_tracking:$(date +%s)
-        docker push dab8106/time_tracking:latest
+        docker push manascomp/time_tracking:latest
         
