@@ -59,7 +59,10 @@ def init_db():
     try:
         with io.open(SERVER_ADDRESS, 'r') as p:
             database.executescript(p.read()).decode("utf8")
-    except:
+    except (Exception) as error:
+        with open("error.txt", "w") as error_file:
+            error_file.write(str(error))
+        
         print("backup load failed")
 
     backup_db()
