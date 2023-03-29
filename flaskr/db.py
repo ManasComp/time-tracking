@@ -58,7 +58,7 @@ def init_db():
     
     try:
         with io.open(SERVER_ADDRESS, 'r') as p:
-            database.executescript(p.read())
+            database.executescript(p.read()).decode("utf8")
     except:
         print("backup load failed")
 
