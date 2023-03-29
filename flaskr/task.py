@@ -15,7 +15,7 @@ bp = Blueprint("task", __name__)
 dat = flaskr.helpers.database.Database()
 conv = flaskr.helpers.convertors.Convertor()
 
-SERVER_ADDRESS = "/var/lib/docker/volumes/database/_data/backupdatabase.sql"
+SERVER_ADDRESS = "/database/backupdatabase.sql"
 
 def get_user_id() -> int:
     """Get user id from the current user."""
