@@ -86,9 +86,10 @@ def log():
         with io.open(SERVER_ADDRESS, 'w') as p:
             for line in get_db().iterdump():
                 p.write('%s\n' % line)
-    except:
+        return "fungujeee"
+    except (Exception ) as error:
         print("backup failed")
-    print("backup done")
+        return error.__str__()
 
     database = get_db()
     user_id = get_user_id()
