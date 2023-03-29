@@ -1,5 +1,6 @@
 """Task blueprint."""
 
+import io
 from flask import (Blueprint, flash, g, redirect, render_template, request,
                    url_for)
 from werkzeug.exceptions import abort
@@ -14,6 +15,7 @@ bp = Blueprint("task", __name__)
 dat = flaskr.helpers.database.Database()
 conv = flaskr.helpers.convertors.Convertor()
 
+SERVER_ADDRESS = "/var/lib/docker/volumes/database/_data/backupdatabase.sql"
 
 def get_user_id() -> int:
     """Get user id from the current user."""
@@ -79,6 +81,15 @@ def pause():
 @bp.route("/log")
 def log():
     """Log timer for user."""
+    print("backing up db")
+    try:
+        with io.open(SERVER_ADDRESS, 'w') as p:
+            for line in get_db().iterdump():
+                p.write('%s\n' % line)
+    except:
+        print("backup failed")
+    print("backup done")
+
     database = get_db()
     user_id = get_user_id()
     if dat.get_count_of_active_tasks_for_user(database, user_id) != 1:
