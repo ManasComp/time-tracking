@@ -228,9 +228,6 @@ def show_user(id):
         username = request.form["username"]
         password = request.form["password"]
         user_type = request.form["user_type"]
-        print("\n\n\n\n\n\n")
-        print(password)
-        print("\n\n\n\n\n\n")
         if password == "" or password is not None:
             password = generate_password_hash(password)
             dat.edit_user_with_password(
