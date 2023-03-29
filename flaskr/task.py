@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash
 import flaskr.helpers.convertors
 import flaskr.helpers.database
 from flaskr.auth import login_required
-from flaskr.db import get_db
+from flaskr.db import get_db, init_db
 
 bp = Blueprint("task", __name__)
 dat = flaskr.helpers.database.Database()
@@ -149,6 +149,7 @@ def update(id):
 
 @bp.route("/ended", methods=("GET", "POST"))
 def ended():
+    init_db()
     """End timer for user."""
     database = get_db()
     user_id = get_user_id()
