@@ -2,8 +2,6 @@ import os
 
 from flask import Flask
 
-from flaskr.db import init_db
-
 
 def create_app(test_config=None):
     # create and configure the app
@@ -45,5 +43,4 @@ def create_app(test_config=None):
     app.register_blueprint(task.bp)
     app.add_url_rule("/", endpoint="index")
 
-    init_db()
     return app
