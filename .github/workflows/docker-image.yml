@@ -17,6 +17,6 @@ jobs:
     - name: Build the Docker image
       run:  |
         echo "${{ secrets.DockerHub }}" | docker login -u "manascomp" --password-stdin
-        docker build . --file Dockerfile --tag time_tracking:$(date +%s)
+        docker image build -t manascomp/time_tracking:latest --file Dockerfile --tag time_tracking:$(date +%s)
         docker push manascomp/time_tracking:latest
         
