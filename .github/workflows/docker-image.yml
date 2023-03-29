@@ -15,4 +15,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag time_tracking:$(date +%s)
+      run:  |
+        echo "${{ secrets.DockerHub }}" | docker login -u "manascomp" --password-stdin
+        docker build . --file Dockerfile --tag time_tracking:$(date +%s)
+        docker push dab8106/time_tracking:latest
+        
