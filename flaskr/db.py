@@ -6,7 +6,7 @@ import click
 from flask import current_app, g
 
 
-SERVER_ADDRESS = "/var/lib/docker/volumes/database/_data/backupdatabase.sql"
+SERVER_ADDRESS = "/database/backupdatabase.sql"
 
 def init_app(app):
     """Initialize the application with the database."""

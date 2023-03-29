@@ -15,8 +15,6 @@ bp = Blueprint("task", __name__)
 dat = flaskr.helpers.database.Database()
 conv = flaskr.helpers.convertors.Convertor()
 
-SERVER_ADDRESS = "/database/backupdatabase.sql"
-
 def get_user_id() -> int:
     """Get user id from the current user."""
     if g.user is None:
@@ -81,15 +79,6 @@ def pause():
 @bp.route("/log")
 def log():
     """Log timer for user."""
-    print("backing up db")
-    try:
-        with io.open(SERVER_ADDRESS, 'w') as p:
-            for line in get_db().iterdump():
-                p.write('%s\n' % line)
-        return "fungujeee"
-    except (Exception ) as error:
-        print("backup failed")
-        return error.__str__()
 
     database = get_db()
     user_id = get_user_id()
