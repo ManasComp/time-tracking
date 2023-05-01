@@ -21,4 +21,5 @@ You need to install it first - https://docs.docker.com/get-docker/.
 1. `sh script.sh`
 ##### Run locally without volume
 1. `sh run.sh`
-In both cases you can run the 
+### Minimal requirements
+### How to access
