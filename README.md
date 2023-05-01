@@ -1,4 +1,4 @@
-# 1. time-tracking
+# Time Tracking
 
 ## Installation:
 
