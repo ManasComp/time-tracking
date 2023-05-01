@@ -17,3 +17,5 @@ build/
 .mypy_cache/
 .vscode/
 .DS_Store
+
+error.txt

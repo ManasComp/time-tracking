@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta
 
 from flaskr.db import backup_db, initilized, load_db
+import os.path
 
 class Database:
     def get_count_of_active_tasks_for_user(self, db, userid: int) -> int:
-        if initilized:
-            backup_db()
-        else:
-            load_db()
+        if os.path.isdir("/database"):
+            if initilized:
+                backup_db()
+            else:
+                load_db()
         return db.execute("SELECT COUNT(*) FROM task WHERE author_id = ? AND finished = 0", (userid,)).fetchone()[0]
 
     def create_new_task(self, db, userid: int):
