@@ -16,4 +16,4 @@ RUN flask init-db
 
 EXPOSE 4995
 
-CMD [ "flask", "--debug", "run", "--host=0.0.0.0", "--port=4995" ]
+CMD [ "flask", "run", "--host=0.0.0.0", "--port=4995" ]
