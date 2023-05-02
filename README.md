@@ -3,7 +3,7 @@
 ## Installation:
 
 Application is ready to be used in docker.
-You need to install it first - https://docs.docker.com/get-docker/.
+You need to install docker first - https://docs.docker.com/get-docker/.
 ### Several ways:
 #### Production
 ##### Portainer
@@ -17,9 +17,22 @@ You need to install it first - https://docs.docker.com/get-docker/.
 3. Create new container, pull image from https://hub.docker.com/r/manascomp/time_tracking
 4. Mount the volume to the container to adress `/database`
 #### Development
+1. Clone this repository
 ##### Raw docker without volume
-1. `sh script.sh`
+2. `sh script.sh`
 ##### Run locally without volume
-1. `sh run.sh`
+2. `sh run.sh`
 ### Minimal requirements
+- system that supports docker engine
+- connection to internet
+- at least 8GB RAM
+- at least 5GB free storage on  SSD
 ### How to access
+#### default admin user
+- username: `Ondrej`
+- password: `Man`
+#### From docker
+- address `localhost:4995`
+#### Locally
+- address `localhost:4999`
+
